@@ -1,0 +1,15 @@
+﻿# Ignore everything
+*
+
+# But not .gitignore itself
+!.gitignore
+
+# Allow the plugin folder structure
+!Plugins/
+!Plugins/ObjectPooling/
+!Plugins/ObjectPooling/**
+
+# Ignore generated files inside the plugin
+Plugins/ObjectPooling/Binaries/
+Plugins/ObjectPooling/Intermediate/
+
