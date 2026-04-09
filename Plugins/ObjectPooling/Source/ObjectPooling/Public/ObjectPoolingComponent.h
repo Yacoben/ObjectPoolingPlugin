@@ -21,9 +21,12 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/* Delegates */
+	
+	// Broadcast when the pool has been initialized with all actors
 	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
 	FOnPoolInitialized OnPoolInitialized;
 	
+	// Broadcast when the pool has been deinitialized and all actors destroyed
 	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
 	FOnPoolDeinitialized OnPoolDeinitialized;
 	
@@ -56,11 +59,13 @@ public:
 private:
 	UPROPERTY()
 	TArray<AActor*> ObjectPool;
-	
 	bool bInitialized = false;
 	FTransform ParkingZoneTransform;
 	
+	// Enables visibility, tick, and collision, then moves the actor to the given transform
 	void ActivateActor(AActor* Actor, const FTransform& Transform);
+	
+	// Disables visibility, tick, and collision, then moves the actor to the parking zone
 	void DeactivateActor(AActor* Actor) const;
 	
 	/* Getters and Setters */
