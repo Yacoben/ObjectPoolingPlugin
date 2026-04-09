@@ -33,25 +33,30 @@ void UObjectPoolingComponent::InitializePool()
 {
 	if (bInitialized) return;
 	if (!IsValid(GetWorld())) return;
+	ensureMsgf(IsValid(ObjectClass), TEXT("ObjectClass is nullptr. Check the Object Pooling Component settings."));
+	if (!IsValid(ObjectClass)) return;
+	
+	ParkingZoneTransform = FTransform(FQuat::Identity, ParkingZoneLocation);
 	
 	for (int32 i = 0 ; i < PoolSize; i++)
 	{
-		if (AActor* ActorDeferred = GetWorld()->SpawnActorDeferred<AActor>(ObjectClass, FTransform::Identity, GetOwner()))
+		if (AActor* ActorDeferred = GetWorld()->SpawnActorDeferred<AActor>(ObjectClass, ParkingZoneTransform, GetOwner()))
 		{
-			ActorDeferred->SetActorHiddenInGame(true);
-			ActorDeferred->SetActorTickEnabled(false);
-			ActorDeferred->SetActorEnableCollision(false);
-			ActorDeferred->FinishSpawning(FTransform::Identity);
+			ActorDeferred->FinishSpawning(ParkingZoneTransform);
+			DeactivateActor(ActorDeferred);
 			ObjectPool.AddUnique(ActorDeferred);
 		}
 	}
 	
 	bInitialized = true;
+	OnPoolInitialized.Broadcast(ObjectPool);
 }
 
 void UObjectPoolingComponent::DeinitializePool()
 {
+	if (!bInitialized) return;
 	if (!IsValid(GetWorld())) return;
+	if (ObjectPool.IsEmpty()) return;
 	
 	for (int32 i = 0 ; i < ObjectPool.Num(); i++)
 	{
@@ -61,5 +66,27 @@ void UObjectPoolingComponent::DeinitializePool()
 		}
 	}
 	ObjectPool.Empty();
+	bInitialized = false;
+	OnPoolDeinitialized.Broadcast();
+}
+
+void UObjectPoolingComponent::ActivateActor(AActor* Actor, const FTransform& Transform)
+{
+	if (!IsValid(Actor)) return;
+	
+	Actor->SetActorTransform(Transform);
+	Actor->SetActorHiddenInGame(false);
+	Actor->SetActorTickEnabled(true);
+	Actor->SetActorEnableCollision(true);
+}
+
+void UObjectPoolingComponent::DeactivateActor(AActor* Actor) const
+{
+	if (!IsValid(Actor)) return;
+	
+	Actor->SetActorHiddenInGame(true);
+	Actor->SetActorTickEnabled(false);
+	Actor->SetActorEnableCollision(false);
+	Actor->SetActorTransform(ParkingZoneTransform);
 }
 
