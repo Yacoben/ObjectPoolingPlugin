@@ -21,8 +21,9 @@ public:
 	
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-	/* Delegates */
+	
+	
+	/* Delegates ------------------------------------------------------------ */
 	
 	// Broadcast when the pool has been initialized with all actors
 	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
@@ -40,9 +41,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
 	FOnReturnObject OnReturnObject;
 	
-	/* Configuration */
+	/* Delegates ------------------------------------------------------------ */
 	
-	// Whether to automatically initialize pool on BeginPlay
+	
+	/* Configuration ------------------------------------------------------------ */
+	
+	// Whether to automatically initialize pool on BeginPlays
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Object Pooling")
 	bool bInitializeOnBeginPlay = true;
 	
@@ -74,6 +78,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Object Pooling")
 	void ReturnObject(AActor* Actor);
     
+	/* Configuration ------------------------------------------------------------ */
     
 private:
 	UPROPERTY()

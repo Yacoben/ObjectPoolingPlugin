@@ -5,7 +5,7 @@
 #include "ObjectPooling.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
-#include "TimerManager.h"
+
 
 UObjectPoolingComponent::UObjectPoolingComponent()
 {
@@ -90,6 +90,10 @@ AActor* UObjectPoolingComponent::AcquireObject(const FTransform& SpawnTransform)
 	ActiveObjectPool.AddUnique(Actor);
 	InactiveObjectPool.Pop();
 	OnAcquireObject.Broadcast(Actor, SpawnTransform);
+	if (Actor->Implements<UPoolableActor>())
+	{
+		IPoolableActor::Execute_OnAcquiredFromPool(Actor, SpawnTransform, this);
+	}
 	return Actor;
 }
 
@@ -103,6 +107,10 @@ void UObjectPoolingComponent::ReturnObject(AActor* Actor)
 	InactiveObjectPool.AddUnique(Actor);
 	DeactivateActor(Actor);
 	OnReturnObject.Broadcast();
+	if (Actor->Implements<UPoolableActor>())
+	{
+		IPoolableActor::Execute_OnReturnedToPool(Actor);
+	}
 }
 
 void UObjectPoolingComponent::ActivateActor(AActor* Actor, const FTransform& Transform)

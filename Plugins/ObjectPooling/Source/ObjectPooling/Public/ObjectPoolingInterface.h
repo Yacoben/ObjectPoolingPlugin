@@ -23,7 +23,7 @@ class OBJECTPOOLING_API IPoolableActor
 public:
 	/** Called when the actor is taken from the pool. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Object Pooling")
-	void OnAcquiredFromPool(const FTransform& SpawnTransform);
+	void OnAcquiredFromPool(const FTransform& SpawnTransform, class UObjectPoolingComponent* OwningPool);
 
 	/** Called when the actor is returned to the pool. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Object Pooling")
