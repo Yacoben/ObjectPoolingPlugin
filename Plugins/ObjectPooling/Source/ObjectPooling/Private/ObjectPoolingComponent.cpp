@@ -44,30 +44,65 @@ void UObjectPoolingComponent::InitializePool()
 		{
 			ActorDeferred->FinishSpawning(ParkingZoneTransform);
 			DeactivateActor(ActorDeferred);
-			ObjectPool.AddUnique(ActorDeferred);
+			InactiveObjectPool.AddUnique(ActorDeferred);
 		}
 	}
 	
 	bInitialized = true;
-	OnPoolInitialized.Broadcast(ObjectPool);
+	OnPoolInitialized.Broadcast(InactiveObjectPool);
 }
 
 void UObjectPoolingComponent::DeinitializePool()
 {
 	if (!bInitialized) return;
 	if (!IsValid(GetWorld())) return;
-	if (ObjectPool.IsEmpty()) return;
 	
-	for (int32 i = 0 ; i < ObjectPool.Num(); i++)
+	for (int32 i = 0 ; i < InactiveObjectPool.Num(); i++)
 	{
-		if (ObjectPool[i])
+		if (InactiveObjectPool[i])
 		{
-			ObjectPool[i]->Destroy();
+			InactiveObjectPool[i]->Destroy();
 		}
 	}
-	ObjectPool.Empty();
+	
+	for (int32 i = 0 ; i < ActiveObjectPool.Num(); i++)
+	{
+		if (ActiveObjectPool[i])
+		{
+			ActiveObjectPool[i]->Destroy();
+		}
+	}
+	
+	InactiveObjectPool.Empty();
+	ActiveObjectPool.Empty();
 	bInitialized = false;
 	OnPoolDeinitialized.Broadcast();
+}
+
+AActor* UObjectPoolingComponent::AcquireObject(const FTransform& SpawnTransform)
+{
+	if (!bInitialized) return nullptr;
+	if (InactiveObjectPool.IsEmpty()) return nullptr;
+	if (!IsValid(InactiveObjectPool.Last())) return nullptr;
+	
+	AActor* Actor = InactiveObjectPool.Last();
+	ActivateActor(Actor, SpawnTransform);
+	ActiveObjectPool.AddUnique(Actor);
+	InactiveObjectPool.Pop();
+	OnAcquireObject.Broadcast(Actor, SpawnTransform);
+	return Actor;
+}
+
+void UObjectPoolingComponent::ReturnObject(AActor* Actor)
+{
+	if (!bInitialized) return;
+	if (!IsValid(Actor)) return;
+	if (!ActiveObjectPool.Contains(Actor)) return;
+	
+	ActiveObjectPool.Remove(Actor);
+	InactiveObjectPool.AddUnique(Actor);
+	DeactivateActor(Actor);
+	OnReturnObject.Broadcast();
 }
 
 void UObjectPoolingComponent::ActivateActor(AActor* Actor, const FTransform& Transform)

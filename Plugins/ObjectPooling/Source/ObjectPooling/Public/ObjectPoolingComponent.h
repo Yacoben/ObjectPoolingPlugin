@@ -8,6 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPoolInitialized, const TArray<AActor*>&, ObjectPool);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPoolDeinitialized);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAcquireObject, AActor*, ActorFromPool, const FTransform&, SpawnTransform);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReturnObject);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class OBJECTPOOLING_API UObjectPoolingComponent : public UActorComponent
@@ -29,6 +31,14 @@ public:
 	// Broadcast when the pool has been deinitialized and all actors destroyed
 	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
 	FOnPoolDeinitialized OnPoolDeinitialized;
+	
+	// Broadcast when an actor is acquired from the pool with its spawn transform
+	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
+	FOnAcquireObject OnAcquireObject;
+	
+	// Broadcast when an actor is returned back to the pool
+	UPROPERTY(BlueprintAssignable, Category = "Object Pooling")
+	FOnReturnObject OnReturnObject;
 	
 	/* Configuration */
 	
@@ -55,10 +65,23 @@ public:
 	// Destroys all pooled actors and clears the pool
 	UFUNCTION(BlueprintCallable, Category = "Object Pooling")
 	void DeinitializePool();
+
+	// Acquires an inactive actor from the pool, activates it at the given transform, and returns it. Returns nullptr if no actors are available.
+	UFUNCTION(BlueprintCallable, Category = "Object Pooling")
+    AActor* AcquireObject(const FTransform& SpawnTransform);
 	
+	// Deactivates the actor and returns it back to the inactive pool
+	UFUNCTION(BlueprintCallable, Category = "Object Pooling")
+	void ReturnObject(AActor* Actor);
+    
+    
 private:
 	UPROPERTY()
-	TArray<AActor*> ObjectPool;
+	TArray<AActor*> InactiveObjectPool;
+	
+	UPROPERTY()
+	TArray<AActor*> ActiveObjectPool;
+	
 	bool bInitialized = false;
 	FTransform ParkingZoneTransform;
 	
@@ -70,8 +93,12 @@ private:
 	
 	/* Getters and Setters */
 public:
-	// Get array of objects in pool
+	// Get array of inactive objects in pool
 	UFUNCTION(BlueprintCallable, Category = "Object Pooling")
-	const TArray<AActor*>& GetObjectPool() const { return ObjectPool; }
+	const TArray<AActor*>& GetInactiveObjectPool() const { return InactiveObjectPool; }
+	
+	// Get array of active objects in pool
+	UFUNCTION(BlueprintCallable, Category = "Object Pooling")
+	const TArray<AActor*>& GetActiveObjectPool() const { return ActiveObjectPool; }
 };
 
